@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import cv2
+from matplotlib import pyplot as plt
 
 
 def build_equ(four_corners):
@@ -14,7 +15,12 @@ if __name__ == "__main__":
     # 图片角点顺序如下：
     # 0 1
     # 3 2
-    detected_corner = [[96, 87], [330, 99], [339, 459], [57, 440]]
+    # src_img_path="./data/000026.jpg"
+    # detected_corner = [[87,96], [99,330], [459,339], [440,57]]
+
+    src_img_path="./data/000872.jpg"
+    detected_corner=[[119,74],[129,296],[442,306],[444,55]]
+
     detected_corner = np.array(detected_corner, dtype=np.int32)
 
     height, width = [504, 378]
@@ -33,7 +39,8 @@ if __name__ == "__main__":
     # print(test)
 
     # 双线性插值
-    src_img = cv2.imread("./data/000026.jpg")
+    src_img = cv2.imread(src_img_path)
+    # pick_img=cv2.copyMakeBorder(src_img,0,1,0,1,cv2.BORDER_REPLICATE)
     tar_img = np.zeros(shape=(height, width, 3))
     # 遍历每个像素，进行后向插值
     for channel in range(3):
@@ -57,5 +64,10 @@ if __name__ == "__main__":
                                              src_img[x_ceil, y_ceil, channel] * q1 * p1 + \
                                              src_img[x_floor, y_ceil, channel] * q1 * p2
                 except:
-                    print(i, j, channel)
-    cv2.imshow(np.uint(tar_img))
+                    print(x_ceil,x_floor,y_ceil,y_floor)
+                    print(src_img.shape)
+                    assert 1==9
+    cv2.imshow('Window', np.uint8(tar_img))
+    cv2.waitKey(0)
+    # plt.imshow(np.uint8(tar_img))
+    # plt.show()
