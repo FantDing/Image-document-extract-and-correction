@@ -74,12 +74,53 @@ def hough_transform(gray_img):
             exist_num += 1
             if exist_num >= top_k:
                 break
+    # ----------------------------------过滤 2: 倾角在45度也不予考虑-------------------------------
+    valid_angle = np.abs(valid_data[:, 0] - 0.785) > 0.2
+    valid_data = valid_data[valid_angle, :]
 
+    # valid_angle = valid_data[:, 0] > 0
+    # valid_data = valid_data[valid_angle, :]
 
+    # -------------------------------计算交点----------------------------------
+    # 1. 为了化简计算,把直线分成接近水平/垂直, 两种直线
+    vert_ind = np.abs(valid_data[:, 0] - 1.5) > 0.5
+    vert_lines = valid_data[vert_ind, :]  # 接近垂直的直线
+    hori_lines = valid_data[np.logical_not(vert_ind), :]  # 接近水平的直线
+
+    # 排序: 为了能够组成正方形,先进行排序
+    test = np.argsort(np.abs(vert_lines[:, 1]))
+    vert_lines = vert_lines[test, :]
+
+    test = np.argsort(np.abs(hori_lines[:, 1]))
+    hori_lines = hori_lines[test, :]
+
+    # 2. 计算交点
+    points = []
+    num_vert_lines = vert_lines.shape[0]
+    num_hori_lines = hori_lines.shape[0]
+    for i in range(num_vert_lines):
+        for j in range(num_hori_lines):
+            point = get_intersection_points(vert_lines[i], hori_lines[j])
+            points.append([point[1], point[0]])
+            # cv2.circle(grad_img, tuple(point), 10, (255, 0, 0), 2)  # 画出交点
+
+    # 3. 近似面积最大的为角点
+    points = np.array(points).reshape(num_vert_lines, num_hori_lines, 2)
+    max_area = 0
+    for i in range(num_vert_lines - 1):
+        for j in range(num_hori_lines - 1):
+            left_top = points[i][j]
+            left_bottom = points[i][j + 1]
+            right_top = points[i + 1][j]
+            right_bottom = points[i + 1][j + 1]
+            area = get_approx_area(left_top, left_bottom, right_top, right_bottom)
+            if area > max_area:
+                max_area = area
+                point_seq = (left_top, right_top, right_bottom, left_bottom)
     #  绘制检测到的直线
-    for i in range(top_k):
+    for i in range(valid_data.shape[0]):
         theta, rho = tuple(valid_data[i])
-        print(theta, rho)
+        # print(theta, rho)
         a = np.cos(theta)
         b = np.sin(theta)
         x0 = a * rho
@@ -90,7 +131,23 @@ def hough_transform(gray_img):
         y2 = int(y0 - 1000 * (a))
         cv2.line(grad_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
 
-    return grad_img
+    return grad_img, point_seq
+
+
+def get_approx_area(p1, p2, p3, p4):
+    top_line = np.abs(
+        p1[1] - p3[1]
+    )
+    bottem_line = np.abs(
+        p2[1] - p4[1]
+    )
+    left_line = np.abs(
+        p1[0] - p2[0]
+    )
+    right_line = np.abs(
+        p3[0] - p4[0]
+    )
+    return (top_line + bottem_line) * (left_line + right_line)
 
 
 def is_new_line(theta, rho, valid_data, exist_num):
@@ -100,6 +157,26 @@ def is_new_line(theta, rho, valid_data, exist_num):
             # 角度相近 & rho相近
             return False
     return True
+
+
+def get_intersection_points(line1, line2):
+    """
+    由极坐标表示的line1, line2,求出角点(矩阵求解方程)
+    :param line1: [theta1, rho1]
+    :param line2: [theta2,rho2]
+    :return: row, col
+    """
+    rho_mat = np.array(
+        [line1[1], line2[1]]
+    )
+    theta_mat = np.array(
+
+        [[np.cos(line1[0]), np.sin(line1[0])],
+         [np.cos(line2[0]), np.sin(line2[0])]]
+    )
+    inv_theta_mat = np.linalg.inv(theta_mat)
+    result = np.matmul(inv_theta_mat, rho_mat).astype(np.int32)
+    return result.astype(np.int32)  # 由于是坐标,需要改成int
 
 
 def harries(gray):
@@ -114,14 +191,13 @@ def harries(gray):
 
 if __name__ == "__main__":
     path = "./data/000026.jpg"
-    # path='./data/000872.jpg'
+    # path = './data/000872.jpg'
     # path = './data/001201.jpg'
     # path = './data/001402.jpg'
     # path = './data/001552.jpg'
     img = cv2.imread(path)
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    detect_img = hough_transform(gray_img)
-    print(detect_img.shape)
+    detect_img, point_seq = hough_transform(gray_img)
+    print(np.array(point_seq))
     cv2.imshow('dst', detect_img)
     cv2.waitKey(0)

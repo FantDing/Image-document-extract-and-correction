@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import cv2
+from corner_detection import hough_transform
 
 
 def build_equ(four_corners):
@@ -55,9 +56,8 @@ def fast_bi_inter(src_img, height, width, T_x, T_y):
               np.expand_dims(q1 * p1, axis=1) * src_img[x_ceil, y_ceil, :] + \
               np.expand_dims(q1 * p2, axis=1) * src_img[x_floor, y_ceil, :]
 
-    tar_img=np.reshape(tar_img,(height,width,3))
+    tar_img = np.reshape(tar_img, (height, width, 3))
     return tar_img
-
 
 
 def main():
@@ -121,14 +121,19 @@ def main():
 
 
 if __name__ == "__main__":
-    src_img_path = "./data/000872.jpg"
-    detected_corner = [[119, 74], [129, 296], [442, 306], [444, 55]]
-
+    # path = "./data/1.jpg"
+    # path = "./data/000026.jpg"
+    path = './data/000872.jpg'
+    # path = './data/001201.jpg'
+    # path = './data/001402.jpg'
+    # path = './data/001552.jpg'
+    src_img = cv2.imread(path)
+    # detected_corner = [[119, 74], [129, 296], [442, 306], [444, 55]]
+    gray_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2GRAY)
+    detect_img, detected_corner = hough_transform(gray_img)
     detected_corner = np.array(detected_corner, dtype=np.int32)
-
     height, width = [504, 378]
     target_corner = np.array([[0, 0], [0, width - 1], [height - 1, width - 1], [height - 1, 0]], dtype=np.int32)
-
     # 计算x,y变化矩阵T_x,T_y
     leftMatrix = build_equ(target_corner)
     inversed_leftMat = np.linalg.inv(leftMatrix)
@@ -138,9 +143,8 @@ if __name__ == "__main__":
     Y1 = detected_corner[:, 1]
     T_y = np.matmul(inversed_leftMat, Y1)
 
-    src_img = cv2.imread(src_img_path)
-
-    tar_img=fast_bi_inter(src_img, height, width, T_x, T_y)
+    tar_img = fast_bi_inter(src_img, height, width, T_x, T_y)
     cv2.imshow('Window', np.uint8(tar_img))
     cv2.waitKey(0)
-
+    cv2.imshow('dst', detect_img)
+    cv2.waitKey(0)
