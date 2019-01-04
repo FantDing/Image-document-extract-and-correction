@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import cv2
-from corner_detection import hough_transform
+from corner_detection import detect_corners
 
 
 def build_equ(four_corners):
@@ -9,6 +9,22 @@ def build_equ(four_corners):
     for i, (x0, y0) in enumerate(four_corners):
         X[i, :] = [x0, y0, x0 * y0, 1]
     return X
+
+
+def warpAffine(src_img,detected_corner):
+    height, width = [504, 378]
+    target_corner = np.array([[0, 0], [0, width - 1], [height - 1, width - 1], [height - 1, 0]], dtype=np.int32)
+    # 计算x,y变化矩阵T_x,T_y
+    leftMatrix = build_equ(target_corner)
+    inversed_leftMat = np.linalg.inv(leftMatrix)
+    X1 = detected_corner[:, 0]
+    T_x = np.matmul(inversed_leftMat, X1)
+
+    Y1 = detected_corner[:, 1]
+    T_y = np.matmul(inversed_leftMat, Y1)
+
+    tar_img = fast_bi_inter(src_img, height, width, T_x, T_y)
+    return tar_img
 
 
 def fast_bi_inter(src_img, height, width, T_x, T_y):
@@ -120,30 +136,28 @@ def main():
     cv2.waitKey(0)
 
 
+def cvtColor(src_img):
+    """
+    转彩色图像为灰度图像。模仿opencv命名
+    :param src_img: 彩色图像
+    :return: 灰度图像
+    """
+    gray_img = np.sum(src_img, axis=2) / 3
+    return gray_img.astype(np.uint8)
+
+
 if __name__ == "__main__":
     # path = "./data/1.jpg"
-    # path = "./data/000026.jpg"
-    path = './data/000872.jpg'
+    path = "./data/000026.jpg"
+    # path = './data/000872.jpg'
     # path = './data/001201.jpg'
     # path = './data/001402.jpg'
     # path = './data/001552.jpg'
     src_img = cv2.imread(path)
-    # detected_corner = [[119, 74], [129, 296], [442, 306], [444, 55]]
-    gray_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2GRAY)
-    detect_img, detected_corner = hough_transform(gray_img)
-    detected_corner = np.array(detected_corner, dtype=np.int32)
-    height, width = [504, 378]
-    target_corner = np.array([[0, 0], [0, width - 1], [height - 1, width - 1], [height - 1, 0]], dtype=np.int32)
-    # 计算x,y变化矩阵T_x,T_y
-    leftMatrix = build_equ(target_corner)
-    inversed_leftMat = np.linalg.inv(leftMatrix)
-    X1 = detected_corner[:, 0]
-    T_x = np.matmul(inversed_leftMat, X1)
+    gray_img = cvtColor(src_img)
+    detect_img, detected_corner = detect_corners(gray_img)
 
-    Y1 = detected_corner[:, 1]
-    T_y = np.matmul(inversed_leftMat, Y1)
-
-    tar_img = fast_bi_inter(src_img, height, width, T_x, T_y)
+    tar_img=warpAffine(src_img)
     cv2.imshow('Window', np.uint8(tar_img))
     cv2.waitKey(0)
     cv2.imshow('dst', detect_img)

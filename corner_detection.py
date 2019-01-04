@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math
-from scipy.signal import fftconvolve as conv2d
+import matplotlib.pyplot as plt
 
 '''
 可调参数
@@ -25,8 +25,12 @@ def get_grad_img(gray_img):
     return grad_img
 
 
-def hough_transform(gray_img):
-    grad_img = get_grad_img(gray_img)
+def houghLines(grad_img):
+    """
+    从梯度图进行hough变换，检测直线
+    :param grad_img: 梯度图
+    :return: 检测出来的直线的极坐标表示
+    """
     # --------------------------------------投票------------------------------------------
     rho_max = math.sqrt(grad_img.shape[0] * grad_img.shape[0] + grad_img.shape[1] * grad_img.shape[1])
     m, n = 180, 2000
@@ -61,31 +65,37 @@ def hough_transform(gray_img):
     top_k = 5
     argmax_ind = np.dstack(np.unravel_index(np.argsort(-vote_table.ravel(), ), (m, n)))
     argmax_ind = argmax_ind[0, :, :]
-    valid_data = np.zeros((top_k, 2))
+    valid_lines = np.zeros((top_k, 2))
     exist_num = 0
     for i in range(0, m * n):
         row_ind, col_ind = tuple(argmax_ind[i])
         theta = theta_range[row_ind]
         rho = rho_range[col_ind]
-        if is_new_line(theta, rho, valid_data, exist_num):
+        if is_new_line(theta, rho, valid_lines, exist_num):
             # 遇到新的线了
-            valid_data[exist_num][0] = theta
-            valid_data[exist_num][1] = rho
+            # print(theta,rho)
+            valid_lines[exist_num][0] = theta
+            valid_lines[exist_num][1] = rho
             exist_num += 1
             if exist_num >= top_k:
                 break
     # ----------------------------------过滤 2: 倾角在45度也不予考虑-------------------------------
-    valid_angle = np.abs(valid_data[:, 0] - 0.785) > 0.2
-    valid_data = valid_data[valid_angle, :]
-
+    # valid_angle = np.abs(valid_data[:, 0] - 0.785) > 0.2
+    # valid_data = valid_data[valid_angle, :]
+    #
     # valid_angle = valid_data[:, 0] > 0
     # valid_data = valid_data[valid_angle, :]
+    return valid_lines
 
+
+def detect_corners(gray_img):
+    grad_img = get_grad_img(gray_img)
+    polar_lines = houghLines(grad_img)
     # -------------------------------计算交点----------------------------------
     # 1. 为了化简计算,把直线分成接近水平/垂直, 两种直线
-    vert_ind = np.abs(valid_data[:, 0] - 1.5) > 0.5
-    vert_lines = valid_data[vert_ind, :]  # 接近垂直的直线
-    hori_lines = valid_data[np.logical_not(vert_ind), :]  # 接近水平的直线
+    vert_ind = np.abs(polar_lines[:, 0] - 1.5) > 0.5
+    vert_lines = polar_lines[vert_ind, :]  # 接近垂直的直线
+    hori_lines = polar_lines[np.logical_not(vert_ind), :]  # 接近水平的直线
 
     # 排序: 为了能够组成正方形,先进行排序
     test = np.argsort(np.abs(vert_lines[:, 1]))
@@ -117,9 +127,9 @@ def hough_transform(gray_img):
             if area > max_area:
                 max_area = area
                 point_seq = (left_top, right_top, right_bottom, left_bottom)
-    #  绘制检测到的直线
-    for i in range(valid_data.shape[0]):
-        theta, rho = tuple(valid_data[i])
+    # 绘制检测到的直线
+    for i in range(polar_lines.shape[0]):
+        theta, rho = tuple(polar_lines[i])
         # print(theta, rho)
         a = np.cos(theta)
         b = np.sin(theta)
@@ -131,7 +141,7 @@ def hough_transform(gray_img):
         y2 = int(y0 - 1000 * (a))
         cv2.line(grad_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
 
-    return grad_img, point_seq
+    return grad_img, np.array(point_seq)
 
 
 def get_approx_area(p1, p2, p3, p4):
@@ -152,7 +162,7 @@ def get_approx_area(p1, p2, p3, p4):
 
 def is_new_line(theta, rho, valid_data, exist_num):
     for i in range(exist_num):
-        theta = 0 if theta - 3.1 > 0 else theta
+        theta = 0 if theta - 3.1 > 0 else theta  # 角度3.1...和零度是一样的
         if theta - valid_data[i][0] < 0.2 and np.square(np.abs(rho) - np.abs(valid_data[i][1])) < 1000:
             # 角度相近 & rho相近
             return False
@@ -190,14 +200,18 @@ def harries(gray):
 
 
 if __name__ == "__main__":
-    path = "./data/000026.jpg"
+    # path = "./data/000026.jpg"
     # path = './data/000872.jpg'
     # path = './data/001201.jpg'
     # path = './data/001402.jpg'
     # path = './data/001552.jpg'
+    path = "./data/1.jpg"
     img = cv2.imread(path)
+    img = cv2.resize(img, (504, 738))
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    detect_img, point_seq = hough_transform(gray_img)
+    detect_img, point_seq = detect_corners(gray_img)
     print(np.array(point_seq))
-    cv2.imshow('dst', detect_img)
-    cv2.waitKey(0)
+    plt.imshow(detect_img)
+    plt.show()
+    # cv2.imshow('dst', detect_img)
+    # cv2.waitKey(0)
