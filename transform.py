@@ -11,8 +11,8 @@ def build_equ(four_corners):
     return X
 
 
-def warpAffine(src_img,detected_corner):
-    height, width = [504, 378]
+def warpAffine(src_img, detected_corner,size):
+    height, width = size
     target_corner = np.array([[0, 0], [0, width - 1], [height - 1, width - 1], [height - 1, 0]], dtype=np.int32)
     # 计算x,y变化矩阵T_x,T_y
     leftMatrix = build_equ(target_corner)
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     gray_img = cvtColor(src_img)
     detect_img, detected_corner = detect_corners(gray_img)
 
-    tar_img=warpAffine(src_img)
+    tar_img = warpAffine(src_img)
     cv2.imshow('Window', np.uint8(tar_img))
     cv2.waitKey(0)
     cv2.imshow('dst', detect_img)
