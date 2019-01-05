@@ -22,4 +22,14 @@ SG是自己乱起的，包含了两个技术栈：
 - H: Hough哈夫变换检测直线，得到角点
 - G: Geometic几何校正
 
-
+# 结果
+![000026.jpg](https://i.loli.net/2019/01/05/5c2ffcc192ae4.jpg)
+![000026.jpg](https://i.loli.net/2019/01/05/5c2ffcfe5021c.jpg)
+![000872.jpg](https://i.loli.net/2019/01/05/5c2ffcc194ee2.jpg)
+![000872.jpg](https://i.loli.net/2019/01/05/5c2ffcfe4e4c4.jpg)
+![001402.jpg](https://i.loli.net/2019/01/05/5c2ffcc1a6844.jpg)
+![001402.jpg](https://i.loli.net/2019/01/05/5c2ffcfe51d36.jpg)
+![001552.jpg](https://i.loli.net/2019/01/05/5c2ffcc1a7a7a.jpg)
+![001552.jpg](https://i.loli.net/2019/01/05/5c2ffcfe53f1c.jpg)
+![001201.jpg](https://i.loli.net/2019/01/05/5c2ffcc1a78a6.jpg)
+![001201.jpg](https://i.loli.net/2019/01/05/5c2ffcfe55b12.jpg)
