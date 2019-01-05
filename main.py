@@ -13,7 +13,7 @@ if __name__ == "__main__":
     path = os.path.join('./data', filename)
     src_img = cv2.imread(path)
     gray_img = cvtColor(src_img)
-    # 检测角点：从左上角开始，逆时针
+    # 检测角点：从左上角开始，顺时针
     detect_img, detected_corner = detect_corners(gray_img)
 
     tar_img = warpAffine(src_img, detected_corner, (504, 378))
