@@ -79,10 +79,10 @@ def make_gauss_filter(size, std_D):
 def get_grad_img(gray_img):
     filter_size = 5
     gauss = make_gauss_filter(filter_size, 1.1)
-
-    # gauss = np.ones(shape=(filter_size, filter_size)) / (filter_size * filter_size - 3)
-    # smoothed_img = cv2.filter2D(gray_img, -1, kernel=gauss)
-    smoothed_img = filter2D(gray_img, kernel=gauss)
+    # smoothed_img = filter2D(gray_img, kernel=gauss)
+    from utils import Conv2d
+    filter2D=Conv2d(filter_size,1,1,1,weight=gauss[np.newaxis,:],mode='valid')
+    smoothed_img = filter2D(gray_img[np.newaxis,:])[0]
     row_ind, col_ind = np.where(smoothed_img > 255)
     smoothed_img[row_ind, col_ind] = 255
     # 显示灰度图
@@ -97,12 +97,14 @@ def get_grad_img(gray_img):
         ],
         dtype=np.float32
     )
-    grad_img = filter2D(smoothed_img, kernel=laplace)
+    # grad_img = filter2D(smoothed_img, kernel=laplace)
+    filter2D = Conv2d(3, 1, 1, 1, weight=laplace[np.newaxis, :],mode='valid')
+    grad_img=filter2D(smoothed_img[np.newaxis,:])[0]
     # plt.imshow(grad_img)
     # plt.show()
 
     grad_img = np.where(grad_img > 15, grad_img, 0)
-    # plt.imshow(grad_img)
+    # plt.imshow(grad_img,cmap="gray")
     # plt.show()
     return grad_img
 
@@ -145,6 +147,7 @@ def houghLines(grad_img):
     # ----------------------------------过滤 1： 选出不同的直线-------------------------------
     # 取出top_k条不同的直线
     top_k = 4
+    # unravel_index: https://www.jianshu.com/p/a7e19847bd39 -> 将一维index转换到(m,n)维上
     argmax_ind = np.dstack(np.unravel_index(np.argsort(-vote_table.ravel(), ), (m, n)))
     argmax_ind = argmax_ind[0, :, :]
     valid_lines = np.zeros((top_k, 2))
@@ -245,7 +248,6 @@ def detect_corners(gray_img):
 
     test = np.argsort(np.abs(hori_lines[:, 1]))
     hori_lines = hori_lines[test, :]
-
     # 2. 计算交点
     points = []
     num_vert_lines = vert_lines.shape[0]
@@ -355,7 +357,7 @@ if __name__ == "__main__":
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     detect_img, point_seq = detect_corners(gray_img)
     print(np.array(point_seq))
-    plt.imshow(detect_img)
-    plt.show()
+    # plt.imshow(detect_img)
+    # plt.show()
     # cv2.imshow('dst', detect_img)
     # cv2.waitKey(0)

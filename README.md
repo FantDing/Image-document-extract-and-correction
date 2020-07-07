@@ -2,6 +2,12 @@
 hahaha~~ 很开心又开始做新项目了，是《数字图像分析》大作业。实现文档提取与矫正。
 *整个项目只用到了opencv*的IO操作(包括卷积，生成高斯滤波器等等) 
 
+# 更新
+- 2020.07.07
+    - 使用im2col代替原来三重for循环的卷积形式，整体运行时间能减少一半
+    [![UFaXB8.png](https://s1.ax1x.com/2020/07/07/UFaXB8.png)](https://imgchr.com/i/UFaXB8)
+    
+
 # 运行
 ## 环境
 - `pip install opencv-python numpy`

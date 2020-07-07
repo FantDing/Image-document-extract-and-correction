@@ -12,6 +12,13 @@ def build_equ(four_corners):
 
 
 def warpAffine(src_img, detected_corner,size):
+    '''
+
+    :param src_img:
+    :param detected_corner:
+    :param size: 目标大小
+    :return:
+    '''
     height, width = size
     target_corner = np.array([[0, 0], [0, width - 1], [height - 1, width - 1], [height - 1, 0]], dtype=np.int32)
     # 计算x,y变化矩阵T_x,T_y
@@ -30,9 +37,9 @@ def warpAffine(src_img, detected_corner,size):
 def fast_bi_inter(src_img, height, width, T_x, T_y):
     """
     使用矩阵计算，实现快速双线性插值
-    :param src_img:
-    :param height:
-    :param width:
+    :param src_img: src image
+    :param height: target height
+    :param width: target width
     :return:
     """
     row_same = np.arange(0, height)
