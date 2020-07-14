@@ -5,9 +5,9 @@ from corner_detection import detect_corners
 
 if __name__ == "__main__":
     # filename = "000026.jpg"
-    filename= '000872.jpg'
+    # filename= '000872.jpg'
     # filename= '001201.jpg'
-    # filename= '001402.jpg'
+    filename= '001402.jpg'
     # filename = '001552.jpg'
     path = os.path.join('./data', filename)
     src_img = cv2.imread(path)

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-
+import example
 '''
 可调参数
 @get_grad_img: grad阈值
@@ -79,10 +79,20 @@ def make_gauss_filter(size, std_D):
 def get_grad_img(gray_img):
     filter_size = 5
     gauss = make_gauss_filter(filter_size, 1.1)
+
+    # 1.朴素卷积
     # smoothed_img = filter2D(gray_img, kernel=gauss)
-    from utils import Conv2d
-    filter2D=Conv2d(filter_size,1,1,1,weight=gauss[np.newaxis,:],mode='valid')
-    smoothed_img = filter2D(gray_img[np.newaxis,:])[0]
+
+    # 2. im2col卷积
+    # from utils import Conv2d_MULTITHREADS as Conv2d
+    # from utils import Conv2d
+    # filter2D=Conv2d(filter_size,1,1,1,weight=gauss[np.newaxis,:],mode='valid')
+    # smoothed_img = filter2D.filter(gray_img)
+
+    # 3. c++ im2col
+    smoothed_img=example.conv2d(1,"valid",gauss,gray_img)
+    # print(smoothed_img[30:40,30:40])
+
     row_ind, col_ind = np.where(smoothed_img > 255)
     smoothed_img[row_ind, col_ind] = 255
     # 显示灰度图
@@ -97,9 +107,17 @@ def get_grad_img(gray_img):
         ],
         dtype=np.float32
     )
+
+    # 1.
     # grad_img = filter2D(smoothed_img, kernel=laplace)
-    filter2D = Conv2d(3, 1, 1, 1, weight=laplace[np.newaxis, :],mode='valid')
-    grad_img=filter2D(smoothed_img[np.newaxis,:])[0]
+
+    # 2.
+    # filter2D = Conv2d(3, 1, 1, 1, weight=laplace[np.newaxis, :],mode='valid')
+    # grad_img=filter2D(smoothed_img[np.newaxis,:])[0]
+
+    # 3.
+    grad_img=example.conv2d(1,"valid",laplace,smoothed_img)
+
     # plt.imshow(grad_img)
     # plt.show()
 
