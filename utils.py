@@ -94,7 +94,6 @@ class Conv2d:
 
     def filter(self, image):
         h, w = image.shape
-        print(h)
         if self.mode == "same":
             p_h = (self.s * (h - 1) + self.k - h) // 2
             p_w = (self.s * (w - 1) + self.k - w) // 2

@@ -3,17 +3,29 @@ hahaha~~ 很开心又开始做新项目了，是《数字图像分析》大作�
 *整个项目只用到了opencv*的IO操作(包括卷积，生成高斯滤波器等等) 
 
 # 更新
+- 2020.07.10
+    - 使用 [NumCpp](https://github.com/dpilger26/NumCpp) / [pybind11](https://github.com/pybind/pybind11) 与C++混合编程, 加速卷积过程
+    ![affQLq.png](https://s1.ax1x.com/2020/08/07/affQLq.png)
 - 2020.07.07
     - 使用im2col代替原来三重for循环的卷积形式，整体运行时间能减少一半
     [![UFaXB8.png](https://s1.ax1x.com/2020/07/07/UFaXB8.png)](https://imgchr.com/i/UFaXB8)
     
 
-# 运行
+# 运行纯python
+> 默认. 有时间我添加下参数选项, 选择python还是c++版本
+
 ## 环境
 - `pip install opencv-python numpy`
 ## run
 - `python main.py`
 - 在`main.py`中可以修改需要提取的文件，结果保存在`result`文件夹中
+
+# 运行cpp混编
+> 非默认. 有时间我添加下参数选项, 选择python还是c++版本
+
+- 配置好[NumCpp](https://github.com/dpilger26/NumCpp) / [pybind11](https://github.com/pybind/pybind11)
+- 运行`compile.sh`脚本
+- 在`corner_detection.py`文件中修改c++版本卷积
 
 # 技术栈
 ## S&G ?

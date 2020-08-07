@@ -1,1 +1,2 @@
+#c++ -Wall -shared -std=c++14 -fPIC `python3 -m pybind11 --includes` conv2d.cpp -o example`python3-config --extension-suffix`
 c++ -O3 -Wall -shared -std=c++14 -fPIC `python3 -m pybind11 --includes` conv2d.cpp -o example`python3-config --extension-suffix`

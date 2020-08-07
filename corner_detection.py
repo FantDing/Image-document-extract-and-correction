@@ -84,14 +84,19 @@ def get_grad_img(gray_img):
     # smoothed_img = filter2D(gray_img, kernel=gauss)
 
     # 2. im2col卷积
-    # from utils import Conv2d_MULTITHREADS as Conv2d
-    # from utils import Conv2d
-    # filter2D=Conv2d(filter_size,1,1,1,weight=gauss[np.newaxis,:],mode='valid')
-    # smoothed_img = filter2D.filter(gray_img)
+    from utils import Conv2d_MULTITHREADS as Conv2d
+    from utils import Conv2d
+    filter2D=Conv2d(filter_size,1,1,1,weight=gauss[np.newaxis,:],mode='valid')
+    smoothed_img = filter2D.filter(gray_img)
 
     # 3. c++ im2col
-    smoothed_img=example.conv2d(1,"valid",gauss,gray_img)
-    # print(smoothed_img[30:40,30:40])
+    # smoothed_img=example.conv2d(1,"valid",gauss,gray_img)
+
+    # 4. c++ im2col threads
+    # smoothed_img = example.conv2d_multi(1, "valid", gauss, gray_img)
+
+    # 5. conv pure
+    # smoothed_img = example.conv2d_pure(1, "valid", gauss, gray_img)
 
     row_ind, col_ind = np.where(smoothed_img > 255)
     smoothed_img[row_ind, col_ind] = 255
@@ -112,16 +117,21 @@ def get_grad_img(gray_img):
     # grad_img = filter2D(smoothed_img, kernel=laplace)
 
     # 2.
-    # filter2D = Conv2d(3, 1, 1, 1, weight=laplace[np.newaxis, :],mode='valid')
-    # grad_img=filter2D(smoothed_img[np.newaxis,:])[0]
+    filter2D = Conv2d(3, 1, 1, 1, weight=laplace[np.newaxis, :],mode='valid')
+    grad_img=filter2D(smoothed_img[np.newaxis,:])[0]
 
     # 3.
-    grad_img=example.conv2d(1,"valid",laplace,smoothed_img)
+    # grad_img=example.conv2d(1,"valid",laplace,smoothed_img)
+
+    # 4.
+    # grad_img = example.conv2d_multi(1, "valid", laplace, smoothed_img)
+
+    # 5.
+    # grad_img = example.conv2d_pure(1, "valid", laplace, smoothed_img)
 
     # plt.imshow(grad_img)
     # plt.show()
-
-    grad_img = np.where(grad_img > 15, grad_img, 0)
+    grad_img = np.where(grad_img > 7, grad_img, 0)
     # plt.imshow(grad_img,cmap="gray")
     # plt.show()
     return grad_img
